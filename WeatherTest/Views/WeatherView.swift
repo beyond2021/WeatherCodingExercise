@@ -16,6 +16,7 @@ struct WeatherView: View{
     @FocusState private var isFocused: Bool
     @State private var locationManager: LocationManager = LocationManager()
     // Location
+   
     var body: some View {
       //  NavigationView {
             ZStack{
@@ -47,7 +48,9 @@ struct WeatherView: View{
     
     @ViewBuilder
     private func WeatherDetailsView() -> some View {
+        
         if let weatherData = viewModel.weatherData {
+            let weatherImageUrl = URL(string: "https://openweathermap.org/img/wn/\(weatherData.weather[0].icon)@2x.png")!
             VStack {
                 AsyncImage(url: URL(string: "https://openweathermap.org/img/wn/\(weatherData.weather[0].icon)@2x.png")) { image in
                     image
@@ -56,14 +59,18 @@ struct WeatherView: View{
                 }
                 .frame(width: 100, height: 100)
                 .accessibility(label: Text("Weather icon"))
+                
+//                AsyncImageView(url: weatherImageUrl)
+//                                .frame(width: 100, height: 100)
+//                .accessibility(label: Text("Weather icon"))
                 Text(viewModel.convertKelvinToFarhrenheit())
                     .font(.largeTitle)
                     .accessibility(label: Text("Temperature in Fahrenheit"))
-                    .foregroundStyle(.white)
+//                    .foregroundStyle(.white)
                 Text(weatherData.weather[0].main.capitalized)
                     .font(.subheadline.bold())
                     .accessibility(label: Text("Weather description"))
-                    .foregroundStyle(.white)
+//                    .foregroundStyle(.white)
             }
             .padding()
         } else if let errorMessage = viewModel.errorMessage {

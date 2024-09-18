@@ -30,11 +30,11 @@ class WeatherViewModel: ObservableObject {
     func fetchWeather(for city: String) {
         weatherService.fetchCoordinates(for: city) { [weak self] result in
             if case .success (let coodinate) = result {
-                print(">>> done  \(coodinate[0].lat), \(coodinate[0].lon)")
+//                print(">>> done  \(coodinate[0].lat), \(coodinate[0].lon)")
                 self?.weatherService.fetchWeather(for: "\(coodinate[0].lat)", longitude: "\(coodinate[0].lon)") { result in
                     //                print(result)
                     if case .success(let weather) = result {
-                        print(">>> done sequentially \(weather)")
+//                        print(">>> done sequentially \(weather)")
                         DispatchQueue.main.async {
                             self?.handleWeatherResult(result)
                         }

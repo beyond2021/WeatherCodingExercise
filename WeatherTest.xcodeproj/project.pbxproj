@@ -36,6 +36,7 @@
 				"Location Services/LocationManager.swift",
 				Model/City.swift,
 				Model/WeatherData.swift,
+				ViewModel/AsyncImageViewModel.swift,
 				ViewModel/WeatherViewModel.swift,
 				WeatherService/WeatherService.swift,
 			);

@@ -17,7 +17,7 @@ protocol WeatherServiceProtocol {
 class WeatherService: WeatherServiceProtocol {
     
     /*private let apiKey = "https://api.openweathermap.org/data/2.5/weather?lat=44.34&lon=10.99&appid={4c968e89714b39eaf8624df9d89f5970}"*/ // Replace with your OpenWeatherMap API key.
-    private let apiKey = "4c968e89714b39eaf8624df9d89f5970"
+    private let apiKey = "4c968e89714b39eaf8624df9d89f5970" // Use a proxy Server
     private let baseURL = "https://api.openweathermap.org/data/2.5/weather"
     
     // Fetch coordinates for City.
