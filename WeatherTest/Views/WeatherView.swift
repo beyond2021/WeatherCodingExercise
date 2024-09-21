@@ -26,6 +26,8 @@ struct WeatherView: View{
                     withAnimation(.easeInOut) {
                         WeatherDetailsView()
                     }
+                } else {
+                   
                 }
                 Spacer()
             }
@@ -136,14 +138,35 @@ struct WeatherView: View{
     @ViewBuilder
     private func VerifiedSearch() -> some View {
         VStack {
-            TextField(NSLocalizedString("Enter a US city", comment: ""), text: $viewModel.cityName)
-                .padding()
-                .border(viewModel.isCityNameValid ? Color.white : Color.red)
-                .accessibilityIdentifier("Enter City Name")
-                .onChange(of: viewModel.cityName, initial: false) {
-                    viewModel.validateCityName() // Validate city name whenever it changes
-                }
-                .focused($isFocused)
+            HStack {
+//                Image(systemName: "magnifyingglass")
+//                    .foregroundColor(.white)
+                TextField(NSLocalizedString("Enter a US city", comment: ""), text: $viewModel.cityName)
+                    .padding()
+//                    .border(viewModel.isCityNameValid ? Color.white : Color.red)
+                    .accessibilityIdentifier("Enter City Name")
+                    .onChange(of: viewModel.cityName, initial: false) {
+                        viewModel.validateCityName() // Validate city name whenever it changes
+                    }
+                    .focused($isFocused)
+                    .background{
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .strokeBorder(viewModel.isCityNameValid ? Color.white : Color.red)
+                    }
+                    .padding(.vertical,10)
+//                    .padding(.horizontal)
+                if !viewModel.cityName.isEmpty {
+                            Button {
+                                withAnimation(.easeOut) {
+                                    viewModel.cityName = ""
+                                }
+                            }label: {
+                                Image(systemName: "multiply.circle.fill")
+                                    .tint(.white)
+                            }
+                            .padding(.trailing, 10)
+                        }
+            }
             
             
             if !viewModel.isCityNameValid, let errorMessage = viewModel.errorMessage {
@@ -157,13 +180,15 @@ struct WeatherView: View{
                 lastCitySearched = viewModel.cityName
                 viewModel.fetchWeather(for: viewModel.cityName)
                 viewModel.navigationTitle = lastCitySearched + " Weather ✨"
+                viewModel.cityName = ""
                 
                 isFocused = false
             }
             .padding()
-            .disabled(!viewModel.isCityNameValid) // Disable button if the input is invalid
+            .disabled(!viewModel.isCityNameValid || viewModel.cityName == "") // Disable button if the input is invalid
             .accessibilityIdentifier("Search")
             .foregroundStyle(Color.white)
+            .opacity(!viewModel.isCityNameValid || viewModel.cityName == "" ? 0 : 1)
         }
         .offset(y: 20)
         .padding(.horizontal, 10)
