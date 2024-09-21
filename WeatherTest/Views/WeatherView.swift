@@ -86,6 +86,14 @@ struct WeatherView: View{
                     .font(.subheadline.bold())
                     .accessibility(label: Text("Weather description"))
                     .foregroundStyle(.white)
+                Text(weatherData.weather[0].description.capitalized)
+                    .font(.subheadline.bold())
+                    .accessibility(label: Text("Weather description"))
+                    .foregroundStyle(.white)
+                Text("Visibility: \(weatherData.visibility)ft.")
+                    .font(.subheadline.bold())
+                    .accessibility(label: Text("Weather description"))
+                    .foregroundStyle(.white)
             }
             .padding()
         } else if let errorMessage = viewModel.errorMessage {
@@ -135,6 +143,7 @@ struct WeatherView: View{
                 .onChange(of: viewModel.cityName, initial: false) {
                     viewModel.validateCityName() // Validate city name whenever it changes
                 }
+                .focused($isFocused)
             
             
             if !viewModel.isCityNameValid, let errorMessage = viewModel.errorMessage {
