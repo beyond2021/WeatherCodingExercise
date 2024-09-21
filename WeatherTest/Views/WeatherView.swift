@@ -15,37 +15,48 @@ struct WeatherView: View{
     @State private var cityName: String = ""
     @FocusState private var isFocused: Bool
     @State private var locationManager: LocationManager = LocationManager()
-    // Location
-   
     var body: some View {
-      //  NavigationView {
-            ZStack{
-                LinearGradient(colors: [.blue, .blue, .blue, .blue, .white, .blue], startPoint: .topTrailing, endPoint: .bottom).edgesIgnoringSafeArea([.top,.bottom])
-                VStack {
-//                    SearchView()
-                    VerifiedSearch()
-                        .padding(.bottom, 20)
-                    if !viewModel.inValidCity {
-                        withAnimation(.easeInOut) {
-                            WeatherDetailsView()
-                        }
+        ZStack{
+            LinearGradient(colors: [.blue, .blue, .blue, .blue, .white, .blue], startPoint: .topTrailing, endPoint: .bottom).edgesIgnoringSafeArea([.top,.bottom])
+            VStack {
+                //                    SearchView()
+                VerifiedSearch()
+                    .padding(.bottom, 20)
+                if !viewModel.inValidCity || freeToContinue{
+                    withAnimation(.easeInOut) {
+                        WeatherDetailsView()
                     }
-                    Spacer()
                 }
-                .onChange(of: freeToContinue, initial: false) {
-                    if freeToContinue {
-                        viewModel.fetchWeather(for: lastCitySearched)
-                    }
+                Spacer()
+            }
+            .onChange(of: freeToContinue, initial: false) {
+                if freeToContinue {
+                    viewModel.fetchWeather(for: lastCitySearched)
                 }
             }
-            .navigationBarTitle(viewModel.navigationTitle, displayMode: .inline)
-            .alert(isPresented: $viewModel.showErrorAlert) {  // Show alert when error occurs
-                           Alert(
-                               title: Text("Error"),
-                               message: Text(viewModel.errorMessage ?? NSLocalizedString("Unknown error", comment: "")),
-                               dismissButton: .default(Text("OK"))
-                           )
-                       }
+        }
+        .navigationBarTitle(viewModel.navigationTitle, displayMode: .inline)
+        .floatingBottomSheet(isPresented: $viewModel.showErrorAlert) {
+            SheetView(
+                title: "Ooops!",
+                content: viewModel.errorMessage ?? NSLocalizedString("Unknown error", comment: ""),
+                image: .init(
+                    content: "exclamationmark.triangle.fill",
+                    tint: .red,
+                    foreground: .white
+                ),
+                button1: .init(
+                    content: "OK",
+                    tint: .red,
+                    foreground: .white,
+                    action: {
+                        viewModel.showErrorAlert = false
+                    }
+                )
+            )
+            .presentationDetents([.height(280)])
+            .interactiveDismissDisabled()
+        }
         .onAppear {
             viewModel.checkPermissionStatus()
             viewModel.navigationTitle = lastCitySearched + " Weather ✨"
@@ -55,13 +66,12 @@ struct WeatherView: View{
             lastCitySearched = viewModel.cityName
         }
     }
-    
     @ViewBuilder
     private func WeatherDetailsView() -> some View {
         
         if let weatherData = viewModel.weatherData {
             VStack {
-                AsyncImage(url: URL(string: "https://openweathermap.org/img/wn/\(weatherData.weather.first?.icon ?? "")@2x.png")) { image in
+                AsyncImage(url: URL(string: "https://openweathermap.org/img/wn/\(weatherData.weather.first?.icon ?? "01d")@2x.png")) { image in
                     image
                 } placeholder: {
                     ProgressView()
@@ -71,11 +81,11 @@ struct WeatherView: View{
                 Text(viewModel.convertKelvinToFarhrenheit())
                     .font(.largeTitle)
                     .accessibility(label: Text("Temperature in Fahrenheit"))
-//                    .foregroundStyle(.white)
+                    .foregroundStyle(.white)
                 Text(weatherData.weather[0].main.capitalized)
                     .font(.subheadline.bold())
                     .accessibility(label: Text("Weather description"))
-//                    .foregroundStyle(.white)
+                    .foregroundStyle(.white)
             }
             .padding()
         } else if let errorMessage = viewModel.errorMessage {
@@ -84,88 +94,48 @@ struct WeatherView: View{
                 .accessibility(label: Text("Error message"))
         }
     }
-    @ViewBuilder
-    private func SearchView() -> some View {
-        VStack {
-            HStack(spacing: 10){
-                Image(systemName: "magnifyingglass")
-                    .foregroundColor(.white)
-                TextField(NSLocalizedString("Enter a US city", comment: ""), text: $cityName, onCommit: {
-                    
-                    DispatchQueue.global().async {
-                        if CLLocationManager.locationServicesEnabled() {
-                            viewModel.fetchWeather(for: cityName)
-                            lastCitySearched = cityName
-                            isFocused = false
+        @ViewBuilder
+        private func SearchView() -> some View {
+            VStack {
+                HStack(spacing: 10){
+                    Image(systemName: "magnifyingglass")
+                        .foregroundColor(.white)
+                    TextField(NSLocalizedString("Enter a US city", comment: ""), text: $cityName, onCommit: {
+    
+                        DispatchQueue.global().async {
+                            if CLLocationManager.locationServicesEnabled() {
+                                viewModel.fetchWeather(for: cityName)
+                                lastCitySearched = cityName
+                                isFocused = false
+                            }
                         }
-                    }
-                    
-                })
-                
-                .tint(.white)
+    
+                    })
+    
+                    .tint(.white)
+                }
+                .padding(.vertical,12)
+                .padding(.horizontal, 15)
+                .background{
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .strokeBorder(.white)
+                }
+                .padding(.vertical,10)
+                .padding(.horizontal)
             }
-            .padding(.vertical,12)
-            .padding(.horizontal, 15)
-            .background{
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .strokeBorder(.white)
-            }
-            .padding(.vertical,10)
-            .padding(.horizontal)
+    
         }
-        
-    }
     @ViewBuilder
     private func VerifiedSearch() -> some View {
         VStack {
-                    TextField("Enter City Name", text: $viewModel.cityName)
-                        .padding()
-                        .border(viewModel.isCityNameValid ? Color.white : Color.red)
-                        .accessibilityIdentifier("Enter City Name")
-                        .onChange(of: viewModel.cityName, initial: false) {
-                            viewModel.validateCityName() // Validate city name whenever it changes
-                        }
-                       
-                    
-                    if !viewModel.isCityNameValid, let errorMessage = viewModel.errorMessage {
-                        Text(errorMessage)
-                            .foregroundColor(.red)
-                            .font(.caption)
-                            .accessibilityIdentifier("ErrorMessage")
-                    }
-                    
-                    Button("Search") {
-                        lastCitySearched = viewModel.cityName
-                        viewModel.fetchWeather(for: viewModel.cityName)
-                        viewModel.navigationTitle = lastCitySearched + " Weather ✨"
-                        
-                        isFocused = false
-                    }
-                    .padding()
-                    .disabled(!viewModel.isCityNameValid) // Disable button if the input is invalid
-                    .accessibilityIdentifier("Search")
-                    .foregroundStyle(Color.white)
-                }
-        .offset(y: 20)
-        .padding(.horizontal, 10)
-    }
-}
-
-
-
-#Preview {
-    
-}
-
-/*
- VStack {
-            TextField("Enter City Name", text: $viewModel.cityName)
+            TextField(NSLocalizedString("Enter a US city", comment: ""), text: $viewModel.cityName)
                 .padding()
-                .border(viewModel.isCityNameValid ? Color.gray : Color.red)
+                .border(viewModel.isCityNameValid ? Color.white : Color.red)
                 .accessibilityIdentifier("Enter City Name")
-                .onChange(of: viewModel.cityName) { _ in
+                .onChange(of: viewModel.cityName, initial: false) {
                     viewModel.validateCityName() // Validate city name whenever it changes
                 }
+            
             
             if !viewModel.isCityNameValid, let errorMessage = viewModel.errorMessage {
                 Text(errorMessage)
@@ -175,11 +145,18 @@ struct WeatherView: View{
             }
             
             Button("Search") {
-                viewModel.searchWeather()
+                lastCitySearched = viewModel.cityName
+                viewModel.fetchWeather(for: viewModel.cityName)
+                viewModel.navigationTitle = lastCitySearched + " Weather ✨"
+                
+                isFocused = false
             }
             .padding()
             .disabled(!viewModel.isCityNameValid) // Disable button if the input is invalid
             .accessibilityIdentifier("Search")
+            .foregroundStyle(Color.white)
         }
-        .padding()
- */
+        .offset(y: 20)
+        .padding(.horizontal, 10)
+    }
+}

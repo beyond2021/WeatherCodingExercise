@@ -33,6 +33,8 @@
 		2296D8742C99792B00CFEA12 /* Exceptions for "WeatherTest" folder in "WeatherTestTests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				"Image Caching/AsyncImageLoader.swift",
+				"Image Caching/ImageCacheManager.swift",
 				"Location Services/LocationManager.swift",
 				Model/City.swift,
 				Model/WeatherData.swift,

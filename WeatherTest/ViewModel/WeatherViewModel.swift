@@ -17,7 +17,6 @@ class WeatherViewModel: ObservableObject {
     @Published var cityName: String = ""
     @Published var isCityNameValid: Bool = true
     
-    
     //Error
     @Published var errorMessage: String?
     @Published var showErrorAlert: Bool = false
@@ -41,26 +40,22 @@ class WeatherViewModel: ObservableObject {
                 if coodinate.isEmpty {
                     DispatchQueue.main.async {
                         self?.showErrorAlert = true
-                        self?.errorMessage = "City not found"
+                        self?.errorMessage = "Invalid City"
                         self?.navigationTitle = "Invalid City"
                         self?.inValidCity = true
-                    }
-                   
+                    }  
                     return
-                    
                 }
                 DispatchQueue.main.async {
                     self?.inValidCity = false
                 }
-                
+                let latitude = coodinate.first!.lat
+                let longitude = coodinate.first!.lon
 //                print(">>> done  \(coodinate.first?.lat ?? 40.8860164), \(coodinate.first?.lon ?? -74.0072568)")
-                self?.weatherService.fetchWeather(for: "\(coodinate.first?.lat ?? 40.8860164 )", longitude: "\(coodinate.first?.lon ?? -74.0072568)") { result in
-                    if case .success(let weather) = result {
-//                        print(">>> done sequentially \(weather)")
+                self?.weatherService.fetchWeather(for: "\(latitude)", longitude: "\(longitude)") { result in
                         DispatchQueue.main.async {
                             self?.handleWeatherResult(result)
                         }
-                    }
                 }
                 
             }
@@ -131,10 +126,7 @@ extension WeatherViewModel {
             guard isCityNameValid else {
                 return // Exit if the city name is not valid
             }
-            
-            // Continue with the search logic
-            // Example: Call weather service API
-      
+           
     }
 
 }
