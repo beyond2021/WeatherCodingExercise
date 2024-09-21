@@ -25,7 +25,11 @@ struct WeatherView: View{
 //                    SearchView()
                     VerifiedSearch()
                         .padding(.bottom, 20)
-                    WeatherDetailsView()
+                    if !viewModel.inValidCity {
+                        withAnimation(.easeInOut) {
+                            WeatherDetailsView()
+                        }
+                    }
                     Spacer()
                 }
                 .onChange(of: freeToContinue, initial: false) {
@@ -34,12 +38,18 @@ struct WeatherView: View{
                     }
                 }
             }
-            .navigationBarTitle(lastCitySearched + " Weather ✨", displayMode: .inline)
-      //  }
+            .navigationBarTitle(viewModel.navigationTitle, displayMode: .inline)
+            .alert(isPresented: $viewModel.showErrorAlert) {  // Show alert when error occurs
+                           Alert(
+                               title: Text("Error"),
+                               message: Text(viewModel.errorMessage ?? NSLocalizedString("Unknown error", comment: "")),
+                               dismissButton: .default(Text("OK"))
+                           )
+                       }
         .onAppear {
-            print(freeToContinue)
             viewModel.checkPermissionStatus()
-            print(freeToContinue)
+            viewModel.navigationTitle = lastCitySearched + " Weather ✨"
+            viewModel.inValidCity = false
         }
         .onDisappear {
             lastCitySearched = viewModel.cityName
@@ -51,7 +61,7 @@ struct WeatherView: View{
         
         if let weatherData = viewModel.weatherData {
             VStack {
-                AsyncImage(url: URL(string: "https://openweathermap.org/img/wn/\(weatherData.weather[0].icon)@2x.png")) { image in
+                AsyncImage(url: URL(string: "https://openweathermap.org/img/wn/\(weatherData.weather.first?.icon ?? "")@2x.png")) { image in
                     image
                 } placeholder: {
                     ProgressView()
@@ -127,6 +137,8 @@ struct WeatherView: View{
                     Button("Search") {
                         lastCitySearched = viewModel.cityName
                         viewModel.fetchWeather(for: viewModel.cityName)
+                        viewModel.navigationTitle = lastCitySearched + " Weather ✨"
+                        
                         isFocused = false
                     }
                     .padding()

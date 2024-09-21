@@ -16,7 +16,15 @@ class WeatherViewModel: ObservableObject {
     //
     @Published var cityName: String = ""
     @Published var isCityNameValid: Bool = true
+    
+    
+    //Error
     @Published var errorMessage: String?
+    @Published var showErrorAlert: Bool = false
+    @Published var inValidCity: Bool = false
+    
+    //NavigationTitle
+    @Published var navigationTitle: String = "Weather App ✨"
     
     // Dependency Injection: Inject the weather service.
     init(weatherService: WeatherServiceProtocol) {
@@ -30,9 +38,23 @@ class WeatherViewModel: ObservableObject {
     func fetchWeather(for city: String) {
         weatherService.fetchCoordinates(for: city) { [weak self] result in
             if case .success (let coodinate) = result {
-//                print(">>> done  \(coodinate[0].lat), \(coodinate[0].lon)")
-                self?.weatherService.fetchWeather(for: "\(coodinate[0].lat)", longitude: "\(coodinate[0].lon)") { result in
-                    //                print(result)
+                if coodinate.isEmpty {
+                    DispatchQueue.main.async {
+                        self?.showErrorAlert = true
+                        self?.errorMessage = "City not found"
+                        self?.navigationTitle = "Invalid City"
+                        self?.inValidCity = true
+                    }
+                   
+                    return
+                    
+                }
+                DispatchQueue.main.async {
+                    self?.inValidCity = false
+                }
+                
+//                print(">>> done  \(coodinate.first?.lat ?? 40.8860164), \(coodinate.first?.lon ?? -74.0072568)")
+                self?.weatherService.fetchWeather(for: "\(coodinate.first?.lat ?? 40.8860164 )", longitude: "\(coodinate.first?.lon ?? -74.0072568)") { result in
                     if case .success(let weather) = result {
 //                        print(">>> done sequentially \(weather)")
                         DispatchQueue.main.async {
@@ -57,6 +79,7 @@ class WeatherViewModel: ObservableObject {
             self.errorMessage = nil
         case .failure(let error):
             self.errorMessage = error.localizedDescription
+            self.showErrorAlert = true  // Trigger the alert
         }
     }
     func convertKelvinToFarhrenheit() -> String {
