@@ -80,6 +80,10 @@ struct Sy: Decodable {
 enum WeatherError: Error, LocalizedError, Equatable {
     case invalidResponse
     case invalidCity
+    case emptyTextField
+    case illegalLetters
+    case searchCountLessThanTwo
+    case coordinatesError
     case networkError(Error)
     case locationError(Error)
 
@@ -89,6 +93,14 @@ enum WeatherError: Error, LocalizedError, Equatable {
             return NSLocalizedString("The weather service returned an invalid response.", comment: "")
         case .invalidCity:
             return NSLocalizedString("The city name is not valid.", comment: "")
+        case .emptyTextField:
+            return NSLocalizedString("City name cannot be empty.", comment: "")
+        case .illegalLetters:
+            return NSLocalizedString("City name can only contain letters and spaces.", comment: "")
+        case .searchCountLessThanTwo:
+            return NSLocalizedString("City name must be at least 2 characters long.", comment: "")
+        case .coordinatesError:
+            return NSLocalizedString("Coordinates not found.", comment: "")
         case .networkError(let error):
             return error.localizedDescription
         case .locationError(let error):
@@ -102,6 +114,14 @@ enum WeatherError: Error, LocalizedError, Equatable {
         case (.invalidResponse, .invalidResponse):
             return true
         case (.invalidCity, .invalidCity):
+            return true
+        case(.emptyTextField, .emptyTextField):
+            return true
+        case(.illegalLetters, .illegalLetters):
+            return true
+        case(.searchCountLessThanTwo, .searchCountLessThanTwo):
+            return true
+        case(.coordinatesError, .coordinatesError):
             return true
         case (.networkError(let lhsError), .networkError(let rhsError)):
             return (lhsError as NSError) == (rhsError as NSError)

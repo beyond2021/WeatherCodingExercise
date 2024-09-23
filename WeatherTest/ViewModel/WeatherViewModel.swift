@@ -20,7 +20,7 @@ class WeatherViewModel: ObservableObject {
     //Error
     @Published var errorMessage: String?
     @Published var showErrorAlert: Bool = false
-    @Published var inValidCity: Bool = false
+//    @Published var inValidCity: Bool = false
     
     //NavigationTitle
     @Published var navigationTitle: String = "Weather App ✨"
@@ -35,37 +35,50 @@ class WeatherViewModel: ObservableObject {
         return formatter
     }
     func fetchWeather(for city: String) {
+        // Step 1: Fetch coordinates for the city
         weatherService.fetchCoordinates(for: city) { [weak self] result in
-            if case .success (let coodinate) = result {
-                if coodinate.isEmpty {
+            guard let self = self else { return }
+            switch result {
+            case .success(let coordinates):
+                if coordinates.isEmpty {
+                    // Handle case when no coordinates are found
                     DispatchQueue.main.async {
-                        self?.showErrorAlert = true
-                        self?.errorMessage = "Invalid City"
-                        self?.navigationTitle = "Invalid City"
-                        self?.inValidCity = true
-                    }  
+                        self.showErrorAlert = true
+                        self.errorMessage = "Invalid City"
+                        self.navigationTitle = "Invalid City"
+                        self.isCityNameValid = false
+                    }
+                    return
+                }
+                // Coordinates are valid, fetch weather
+                guard let latitude = coordinates.first?.lat, let longitude = coordinates.first?.lon else {
+                    // Handle the case where coordinates exist but lat/lon is nil
+                    DispatchQueue.main.async {
+                        self.showErrorAlert = true
+                        self.errorMessage = WeatherError.coordinatesError.localizedDescription
+                    }
                     return
                 }
                 DispatchQueue.main.async {
-                    self?.inValidCity = false
+                    self.isCityNameValid = true
                 }
-                let latitude = coodinate.first!.lat
-                let longitude = coodinate.first!.lon
-//                print(">>> done  \(coodinate.first?.lat ?? 40.8860164), \(coodinate.first?.lon ?? -74.0072568)")
-                self?.weatherService.fetchWeather(for: "\(latitude)", longitude: "\(longitude)") { result in
-                        DispatchQueue.main.async {
-                            self?.handleWeatherResult(result)
-                        }
+                // Step 2: Fetch weather using the valid coordinates
+                self.weatherService.fetchWeather(for: "\(latitude)", longitude: "\(longitude)") { weatherResult in
+                    DispatchQueue.main.async {
+                        self.handleWeatherResult(weatherResult)
+                    }
                 }
-                
-            }
-            if case.failure(let failure) = result {
-                print(">>> \(failure)")
-            }
             
+            case .failure(let error):
+                // Handle error from fetching coordinates
+                DispatchQueue.main.async {
+                    self.showErrorAlert = true
+                    self.errorMessage = "Failed to fetch coordinates: \(error.localizedDescription)"
+                    self.navigationTitle = "Error"
+                }
+            }
         }
     }
-    //  Fetch weather data for the current location.
     // Handle the result of a weather fetch operation.
     private func handleWeatherResult(_ result: Result<WeatherData, WeatherError>) {
         switch result {
@@ -96,7 +109,8 @@ extension WeatherViewModel {
             // Check if the city name is not empty
             guard !cityName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
                 isCityNameValid = false
-                errorMessage = "City name cannot be empty."
+                errorMessage = WeatherError.emptyTextField.localizedDescription
+//                showErrorAlert = true
                 return
             }
             
@@ -104,14 +118,16 @@ extension WeatherViewModel {
             let characterSet = CharacterSet.letters.union(.whitespaces)
             if cityName.rangeOfCharacter(from: characterSet.inverted) != nil {
                 isCityNameValid = false
-                errorMessage = "City name can only contain letters and spaces."
+                errorMessage = WeatherError.illegalLetters.localizedDescription
+//                showErrorAlert = true
                 return
             }
             
             // Additional checks can be added, such as length validation
             if cityName.count < 2 {
                 isCityNameValid = false
-                errorMessage = "City name must be at least 2 characters long."
+                errorMessage = WeatherError.searchCountLessThanTwo.localizedDescription
+//                showErrorAlert = true
                 return
             }
             
