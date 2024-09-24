@@ -85,8 +85,9 @@ struct WeatherView: View{
                 }
                 .frame(width: 100, height: 100)
                 .accessibility(label: Text("Weather icon"))
-                Text(viewModel.convertKelvinToFarhrenheit())
-                    .font(.largeTitle)
+                Text(viewModel.kelvinToFahrenheitString())
+                    .font(.system(size: 80))
+                   // .font(.largeTitle)
                     .accessibility(label: Text("Temperature in Fahrenheit"))
                     .foregroundStyle(.white)
                 Text(weatherData.weather[0].main.capitalized)

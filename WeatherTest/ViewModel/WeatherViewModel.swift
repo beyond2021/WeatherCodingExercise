@@ -20,7 +20,6 @@ class WeatherViewModel: ObservableObject {
     //Error
     @Published var errorMessage: String?
     @Published var showErrorAlert: Bool = false
-//    @Published var inValidCity: Bool = false
     
     //NavigationTitle
     @Published var navigationTitle: String = "Weather App ✨"
@@ -90,10 +89,11 @@ class WeatherViewModel: ObservableObject {
             self.showErrorAlert = true  // Trigger the alert
         }
     }
-    func convertKelvinToFarhrenheit() -> String {
+    func kelvinToFahrenheitString() -> String {
         if let weatherData = self.weatherData {
-            let t = Measurement(value: weatherData.main.temp.rounded(), unit: UnitTemperature.kelvin)
-            return formatter.string(from: t.converted(to: .fahrenheit))
+            let fahrenheit = (weatherData.main.temp - 273.15) * 9 / 5 + 32
+            let roundedFahrenheit = Int(fahrenheit.rounded())
+            return "\(roundedFahrenheit)°F"
         }
         return "N/A"
     }
