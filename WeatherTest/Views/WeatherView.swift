@@ -32,6 +32,7 @@ struct WeatherView: View{
                 }
                 Spacer()
             }
+            .padding(.top, 20)
             .onChange(of: freeToContinue, initial: false) {
                 if freeToContinue {
                     viewModel.fetchWeather(for: viewModel.isCityNameValid ? lastCitySearched :  "Miami")//TODO
@@ -103,7 +104,7 @@ struct WeatherView: View{
                     .accessibility(label: Text("Weather description"))
                     .foregroundStyle(.white)
             }
-            .padding()
+            .padding(.top, -40)
         } else if let _ = viewModel.errorMessage {
             Text("Please enter a valid US city.")
                 .foregroundColor(.white)
